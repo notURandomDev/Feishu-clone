@@ -17,4 +17,10 @@ struct Contacts {
     static let xkq = UIImage(named: "xiao-kaiqin")
     static let ywh = UIImage(named: "yan-wenhua")
     static let zjl = UIImage(named: "zhang-jilong")
+    static let group1 = UIImage(named: "group1")
+    static let group2 = UIImage(named: "group2")
+    static let accountBot = UIImage(named: "account-assist")
+    static let contactBot = UIImage(named: "contact-assist")
+    static let meetingBot = UIImage(named: "meeting-assist")
+    static let docBot = UIImage(named: "doc-assist")
 }
