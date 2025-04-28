@@ -20,7 +20,7 @@ class ContactListVC: UIViewController {
     private var hasMoreData = true // 是否还有更多数据
     
     // 数据管理器
-    private let dataManager = ContactDataManager.shared
+    private let dataManager = ContactDataManager()
     
     struct Cells {
         static let contactCell = "ContactCell"
@@ -30,8 +30,67 @@ class ContactListVC: UIViewController {
         super.viewDidLoad()
         title = "Feishu Messages"
         
+        // 添加切换模式按钮到导航栏
+        setupAppearanceToggleButton()
+        
         setupUI()
         loadInitialData()
+    }
+    
+    // 设置外观模式切换按钮
+    private func setupAppearanceToggleButton() {
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let buttonImage = isDarkMode ? UIImage(systemName: "sun.max") : UIImage(systemName: "moon")
+        let toggleButton = UIBarButtonItem(image: buttonImage,
+                                        style: .plain,
+                                        target: self,
+                                        action: #selector(toggleAppearanceMode))
+        navigationItem.rightBarButtonItem = toggleButton
+    }
+    
+    // 切换深色/浅色模式
+    @objc private func toggleAppearanceMode() {
+        let currentStyle = overrideUserInterfaceStyle
+        let newStyle: UIUserInterfaceStyle = (currentStyle == .dark) ? .light : .dark
+        
+        // 应用新模式
+        self.overrideUserInterfaceStyle = newStyle
+        
+        // 也可以选择应用到整个应用
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            window.overrideUserInterfaceStyle = newStyle
+        }
+        
+        // 更新按钮图标
+        let newImage = newStyle == .dark ? UIImage(systemName: "sun.max") : UIImage(systemName: "moon")
+        navigationItem.rightBarButtonItem?.image = newImage
+    }
+    
+    // 使用iOS 17推荐的trait变化
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+                if self.traitCollection.userInterfaceStyle != previousTraitCollection.userInterfaceStyle {
+                    self.setupAppearanceToggleButton()
+                }
+            }
+        }
+    }
+    
+    // 针对iOS 17以下版本保留兼容方法
+    @available(iOS, deprecated: 17.0, message: "使用registerForTraitChanges替代")
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        // iOS17以下的办法
+        if #unavailable(iOS 17.0) {
+            if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+                setupAppearanceToggleButton()
+            }
+        }
     }
     
     private func setupUI() {

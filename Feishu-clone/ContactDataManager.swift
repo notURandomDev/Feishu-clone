@@ -7,14 +7,11 @@
 import UIKit
 
 class ContactDataManager {
-    // 单例模式
-    static let shared = ContactDataManager()
-    
     // 每页显示的联系人数量
     private let contactsPerPage = 20
     private var allContacts: [Contact] = []
     
-    private init() {
+    init() {
         // 尝试从plist文件加载联系人数据
         loadContactsFromPlist()
     }
@@ -25,13 +22,8 @@ class ContactDataManager {
         if let path = Bundle.main.path(forResource: "mock_contacts", ofType: "plist") {
             loadFromPath(path)
         } else {
-            // 如果Bundle中没有，尝试从项目目录读取
-            let projectPath = "/Users/zhangjilong/Documents/xcode_code/Feishu-clone1/Feishu-clone/mock_contacts.plist"
-            if FileManager.default.fileExists(atPath: projectPath) {
-                loadFromPath(projectPath)
-            } else {
-                print("无法找到mock_contacts.plist文件")
-            }
+            // 如果Bundle中没有，直接fatal error
+            fatalError("无法找到mock_contacts.plist文件")
         }
         
         // 加载后对联系人按时间排序

@@ -79,22 +79,24 @@ class ContactCell: UITableViewCell {
         msgLabel.text = contact.latestMsg
         datetimeLabel.text = contact.datetime
         
-        // 根据联系人类型显示或隐藏标签
-        if(contact.type == .bot) {
-            tagLabel.text = " 机器人 "
-            tagLabel.textColor = UIColor(red: 172/255.0, green: 123/255.0, blue: 3/255.0, alpha: 1)
-            tagLabel.backgroundColor = UIColor(red: 253/255.0, green: 246/255.0, blue: 220/255.0, alpha: 1)
+        // 使用switch语句处理不同的联系人类型
+        switch contact.type {
+        case .bot:
+            tagLabel.text = NSLocalizedString(" 机器人 ", comment: "Bot contact tag")
+            tagLabel.textColor = LarkColor.Tag.Bot.textColor
+            tagLabel.backgroundColor = LarkColor.Tag.Bot.backgroundColor
             tagLabel.isHidden = false
-        }
-        else if(contact.type == .external) {
-            tagLabel.text = " 外部 "
-            tagLabel.textColor = UIColor(red: 17/255.0, green: 72/255.0, blue: 219/255.0, alpha: 1)
-            tagLabel.backgroundColor = UIColor(red: 209/255.0, green: 221/255.0, blue: 253/255.0, alpha: 1)
+            
+        case .external:
+            tagLabel.text = NSLocalizedString(" 外部 ", comment: "External contact tag")
+            tagLabel.textColor = LarkColor.Tag.External.textColor
+            tagLabel.backgroundColor = LarkColor.Tag.External.backgroundColor
             tagLabel.isHidden = false
-        }
-        else {
-            // 对于用户类型，明确隐藏标签
+            
+        case .user:
+            // 对于普通用户类型，隐藏标签
             tagLabel.isHidden = true
+            
         }
     }
     
@@ -116,7 +118,7 @@ class ContactCell: UITableViewCell {
     }
     
     func configureDatetimeLabel() {
-        datetimeLabel.textColor = Styles.textColorSecondary
+        datetimeLabel.textColor = LarkColor.Text.secondary
         datetimeLabel.font = .systemFont(ofSize: Styles.fontSizeSecondary, weight: .semibold)
     }
     
@@ -126,7 +128,7 @@ class ContactCell: UITableViewCell {
     }
     
     func configureMsgLabel() {
-        msgLabel.textColor = Styles.textColorSecondary
+        msgLabel.textColor = LarkColor.Text.secondary
         msgLabel.font = .systemFont(ofSize: Styles.fontSizeSecondary, weight: Styles.fontWeightPrimary)
     }
     
