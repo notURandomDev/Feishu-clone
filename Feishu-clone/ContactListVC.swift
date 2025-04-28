@@ -18,6 +18,7 @@ class ContactListVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         title = "Lark Messenger"
         contacts = fetchData()
         configureTableView()
