@@ -57,27 +57,45 @@ class ContactCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // 添加prepareForReuse方法重置所有状态，解决标签错乱问题
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        // 重置所有视图状态
+        avatarIV.image = nil
+        nameLabel.text = nil
+        msgLabel.text = nil
+        datetimeLabel.text = nil
+        
+        // 重置标签状态
+        tagLabel.isHidden = true
+        tagLabel.backgroundColor = nil
+        tagLabel.text = nil
+    }
+    
     func set(contact: Contact) {
         avatarIV.image = contact.avatar
         nameLabel.text = contact.name
         msgLabel.text = contact.latestMsg
         datetimeLabel.text = contact.datetime
         
-        
-        if(contact.type != .user) {
-            if(contact.type == .bot) {
-                tagLabel.text = " 机器人 "
-                tagLabel.textColor = UIColor(red: 172/255.0, green: 123/255.0, blue: 3/255.0, alpha: 1)
-                tagLabel.backgroundColor = UIColor(red: 253/255.0, green: 246/255.0, blue: 220/255.0, alpha: 1)
-            }
-            if(contact.type == .external) {
-                tagLabel.text = " 外部 "
-                tagLabel.textColor = UIColor(red: 17/255.0, green: 72/255.0, blue: 219/255.0, alpha: 1)
-                tagLabel.backgroundColor = UIColor(red: 209/255.0, green: 221/255.0, blue: 253/255.0, alpha: 1)
-            }
+        // 根据联系人类型显示或隐藏标签
+        if(contact.type == .bot) {
+            tagLabel.text = " 机器人 "
+            tagLabel.textColor = UIColor(red: 172/255.0, green: 123/255.0, blue: 3/255.0, alpha: 1)
+            tagLabel.backgroundColor = UIColor(red: 253/255.0, green: 246/255.0, blue: 220/255.0, alpha: 1)
             tagLabel.isHidden = false
         }
-        
+        else if(contact.type == .external) {
+            tagLabel.text = " 外部 "
+            tagLabel.textColor = UIColor(red: 17/255.0, green: 72/255.0, blue: 219/255.0, alpha: 1)
+            tagLabel.backgroundColor = UIColor(red: 209/255.0, green: 221/255.0, blue: 253/255.0, alpha: 1)
+            tagLabel.isHidden = false
+        }
+        else {
+            // 对于用户类型，明确隐藏标签
+            tagLabel.isHidden = true
+        }
     }
     
     func configureNameLabel() {
