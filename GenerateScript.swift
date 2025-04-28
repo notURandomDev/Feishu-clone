@@ -22,7 +22,7 @@ struct ContactData: Codable {
     let avatarName: String
     let latestMsg: String
     let datetime: String
-    let type: String 
+    let type: String
 }
 
 // 基于当前时间生成的随机时间字符串
