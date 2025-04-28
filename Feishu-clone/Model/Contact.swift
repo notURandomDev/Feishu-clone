@@ -1,18 +1,10 @@
 import UIKit
+import Foundation
 
-enum ContactType {
+enum ContactType: String {
     case user
     case bot
     case external
-    
-    static func fromString(_ string: String) -> ContactType {
-        switch string {
-        case "user": return .user
-        case "bot": return .bot
-        case "external": return .external
-        default: return .user
-        }
-    }
 }
 
 struct Contact {
@@ -39,7 +31,7 @@ struct Contact {
             name: contactData.name,
             latestMsg: contactData.latestMsg,
             datetime: contactData.datetime,
-            type: ContactType.fromString(contactData.type)
+            type: ContactType(rawValue: contactData.type) ?? .user
         )
     }
     
