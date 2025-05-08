@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  ContactListVC.swift
 //  Feishu-clone
 //
 //  Created by Kyle Huang on 2025/4/26.
@@ -12,35 +12,135 @@ class ContactListVC: UIViewController {
     var tableView = UITableView()
     var contacts: [Contact] = []
     
+    // 分页加载属性
+    private var currentPage = 0 // 当前页码
+    private var isLoading = false // 是否正在加载
+    private var refreshControl: UIRefreshControl! // 下拉刷新控件
+    private var loadingIndicator: UIActivityIndicatorView! // 加载指示器
+    private var hasMoreData = true // 是否还有更多数据
+    
+    // 数据管理器
+    private let dataManager = ContactDataManager()
+    
     struct Cells {
         static let contactCell = "ContactCell"
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        title = "Lark Messenger"
-        contacts = fetchData()
+        title = "Feishu Messages"
+        
+        setupUI()
+        loadInitialData()
+    }
+    
+    private func setupUI() {
+        // 添加下拉刷新功能
+        refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshData), for: .valueChanged)
+        
+        // 添加上拉加载指示器
+        loadingIndicator = UIActivityIndicatorView(style: .medium)
+        loadingIndicator.hidesWhenStopped = true
+        loadingIndicator.frame = CGRect(x: 0, y: 0, width: tableView.frame.width, height: 44)
+        
         configureTableView()
     }
     
+    // 加载初始数据
+    private func loadInitialData() {
+        currentPage = 1
+        
+        // 从数据管理器获取第一页数据
+        contacts = dataManager.getContacts(page: currentPage)
+        
+        // 如果从plist加载失败，使用默认数据
+        if contacts.isEmpty {
+            contacts = dataManager.getDefaultContacts()
+            hasMoreData = false
+        } else {
+            hasMoreData = currentPage < dataManager.getTotalPages()
+        }
+        
+        tableView.reloadData()
+    }
+    
+    // 配置表格视图
     func configureTableView() {
         view.addSubview(tableView)
         setTableViewDelegates()
         tableView.rowHeight = UITableView.automaticDimension
         tableView.register(ContactCell.self, forCellReuseIdentifier: Cells.contactCell)
+        tableView.refreshControl = refreshControl
+        tableView.tableFooterView = loadingIndicator
         tableView.pin(to: view)
     }
     
+    // 设置表格视图代理
     func setTableViewDelegates() {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.separatorStyle = .none
     }
-
-
+    
+    // 刷新数据
+    @objc private func refreshData() {
+        // 重置到第一页
+        currentPage = 1
+        contacts = dataManager.getContacts(page: currentPage)
+        hasMoreData = currentPage < dataManager.getTotalPages()
+        
+        tableView.reloadData()
+        refreshControl.endRefreshing()
+    }
+    
+    // 加载更多数据
+    private func loadMoreData() {
+        if isLoading || !hasMoreData {
+            return
+        }
+        
+        isLoading = true
+        loadingIndicator.startAnimating()
+        
+        // 模拟网络延迟
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
+            guard let self = self else { return }
+            
+            // 获取下一页数据
+            let nextPage = self.currentPage + 1
+            let newContacts = self.dataManager.getContacts(page: nextPage)
+            
+            if !newContacts.isEmpty {
+                // 记录插入前的数据数量
+                let currentCount = self.contacts.count
+                
+                // 添加新数据
+                self.contacts.append(contentsOf: newContacts)
+                self.currentPage = nextPage
+                
+                // 创建indexPath数组用于插入新行
+                var indexPaths: [IndexPath] = []
+                for i in 0..<newContacts.count {
+                    indexPaths.append(IndexPath(row: currentCount + i, section: 0))
+                }
+                
+                // 插入新行
+                self.tableView.insertRows(at: indexPaths, with: .fade)
+                
+                // 检查是否还有更多数据
+                self.hasMoreData = self.currentPage < self.dataManager.getTotalPages()
+            } else {
+                self.hasMoreData = false
+            }
+            
+            self.isLoading = false
+            self.loadingIndicator.stopAnimating()
+        }
+    }
 }
 
+// MARK: - UITableViewDelegate, UITableViewDataSource
 extension ContactListVC: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return contacts.count
@@ -51,34 +151,27 @@ extension ContactListVC: UITableViewDelegate, UITableViewDataSource {
         let contact = contacts[indexPath.row]
         cell.set(contact: contact)
         
+        if indexPath.row == contacts.count - 5 && !isLoading && hasMoreData {
+            loadMoreData()
+        }
+        
         return cell
     }
-}
-
-extension ContactListVC {
-    func fetchData() -> [Contact] {
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        // 这里可以添加点击联系人后的操作
+    }
+    
+    // 实现滚动到底部加载更多
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // 计算距离底部的位置
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let screenHeight = scrollView.frame.height
         
-        return [
-            // 2025-04-26（当天，显示 hh:mm）
-            Contact(avatar: Contacts.meetingBot, name: "视频会议助手", latestMsg: "智能纪要：第一期线上课程分享《走进客户端》", datetime: "23:50", type: .bot),
-            Contact(avatar: Contacts.ywh, name: "严文华", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "23:40", type: .external),
-            Contact(avatar: Contacts.contactBot, name: "联系人助手", latestMsg: "联系人申请", datetime: "23:45", type: .bot),
-            Contact(avatar: Contacts.xkq, name: "肖凯琴", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "23:35", type: .external),
-            Contact(avatar: Contacts.sp, name: "苏鹏", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "23:25", type: .external),
-
-            // 2025-04-25（前一天，显示 "昨天"）
-            Contact(avatar: Contacts.accountBot, name: "账号安全中心", latestMsg: "安全登录通知", datetime: "昨天", type: .bot),
-            Contact(avatar: Contacts.lwx, name: "梁惟熙", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "昨天", type: .external),
-            Contact(avatar: Contacts.group1, name: "飞书技术训练营-客户端专场-iOS", latestMsg: "严文华：@所有人 hi~大家下午好！第一期线上课程分享", datetime: "昨天", type: .external),
-            Contact(avatar: Contacts.ljh, name: "厉剑豪", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "昨天", type: .user),
-            Contact(avatar: Contacts.jy, name: "蒋元", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "昨天", type: .external),
-
-            // 2025-04-24（两天前，显示 "M月d日"）
-            Contact(avatar: Contacts.wx, name: "王恂", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "4月24日", type: .external),
-            Contact(avatar: Contacts.docBot, name: "云文档助手", latestMsg: "权限变更", datetime: "4月24日", type: .bot),
-            Contact(avatar: Contacts.zjl, name: "张纪龙", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "4月24日", type: .user),
-            Contact(avatar: Contacts.group2, name: "飞书技术训练营-客户端专场-咨询群", latestMsg: "西南财经大学-计算机-孟靖文：ak都这样，我被刷心服口服", datetime: "4月24日", type: .external),
-            Contact(avatar: Contacts.cwl, name: "曹文龙", latestMsg: "我接受了你的联系人申请，开始聊天吧！", datetime: "4月24日", type: .user)
-        ]
+        if offsetY > contentHeight - screenHeight - 100 && !isLoading && hasMoreData {
+            loadMoreData()
+        }
     }
 }

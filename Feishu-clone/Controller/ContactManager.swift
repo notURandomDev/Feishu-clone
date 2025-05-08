@@ -20,15 +20,17 @@ class ContactManager {
             return []
         }
 
-        return contactArray.compactMap { dict in
+        return contactArray.compactMap { dict -> Contact? in
             let name = dict["name"]
+            
             guard let latestMsg = dict["latestMsg"],
                   let datetime = dict["datetime"],
                   let typeRaw = dict["type"],
                   let type = ContactType(rawValue: typeRaw) else {
                 return nil
             }
-            return Contact(name: name ?? "", latestMsg: latestMsg, datetime: datetime, type: type)
+            
+            return Contact(avatar: nil, name: name ?? "", latestMsg: latestMsg, datetime: datetime, type: type)
         }
     }
 }
