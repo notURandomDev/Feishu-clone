@@ -28,7 +28,7 @@ class ContactListVC: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Feishu Messages"
+        title = "Lark Messenger"
         
         setupUI()
         loadInitialData()
